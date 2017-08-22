@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+  <meta charset="utf-8">
+  <title>木桶布局照片墙</title>
+<style>
+	*{
+            margin:0px;
+            padding:0px;
+        }
+        .img-preview{
+           width:1200px;
+            margin: 0 auto;
+        }
+        .img-row{
+            margin-block-start: 8px;
+                 }
+        .img-row:after{
+            content:'';
+            display: block;
+            clear:both;
+        }
+        .img-box{
+            float:left;
+        }
+       .img-line .img-box:first-child{
+           padding-left: 0px;
+       }
+</style>  
+</head>
+<body>
+<div class="img-preview"></div>
+<script type="text/javascript">
+	var p=1;
+function getData(x){
+		$.ajax({
+			url: 'https://platform.sina.com.cn/slide/album_tech',
+			dataType: 'jsonp',   
+			jsonp:"jsoncallback",
+			data: {
+				app_key: '1271687855',
+				num: x,
+				page:p
+			}
+		}).done(function(ret){
+			if(ret && ret.status && ret.status.code === "0"){
+                var urls=getImgUrls(ret.data)
+                p++;
+               console.log(urls[1])
+               console.log(urls[2])
+              loadImg(urls)
+             
+			}else{
+				console.log('get error data');
+              return 'error'
+			}
+		})
+}
+
+function getImgUrls(result){
+    var urls=[];
+    var x=0;
+    var color;
+	var width;
+	var height;
+  var len=result.length;
+  var j=0;
+  for(var i=0;i<2*len;i++){
+    var Resten=i%2;
+    if(Resten===0){
+       urls.push(result[j].img_url)
+       j++
+    }else{
+      var color=Math.random().toString(16).substring(2,8);
+					var width=Math.floor(Math.random()*100+100)
+					var height=Math.floor(Math.random()*100+100)
+						urls.push("https://placehold.it/"+ width +"x"+ height +"/"+ color +"/fff")
+					x++;
+    }
+  }
+return urls
+}
+   function loadImg(urls){
+                 $.each(urls,function(idx,url){//循环这个数组，
+                      var  img = new Image();//创建一个图片对象；
+                      img.src =url;
+                      img.onload =function(){
+                          var imgInfo ={
+                              target:$(img),//哪一张图片
+                              width: 200*(img.width/img.height),
+                              height:200//高度设为200；
+                          }
+                         render(imgInfo);
+                                              
+                          
+                      }
+                  })			
+				}
+var rowList=[];
+function render(imgInfo){	
+					
+					var clientWidth=$('.img-preview').width();//
+					var lastImg=imgInfo;//
+					var rowWidth=0;//
+					var hh=0;//
+					rowList.push(imgInfo);//
+					$.each(rowList,function(idx,imgInfo){
+						rowWidth=imgInfo.width+rowWidth;//
+							if(rowWidth>clientWidth){
+						rowList.pop();//
+						rowWidth=rowWidth-lastImg.width;//
+                        console.log(rowWidth)
+						hh=clientWidth*200/rowWidth;
+						place(hh);//
+						rowList=[];//
+						rowList.push(lastImg);	
+					}
+					})
+				}
+function place(newRowHeight){
+				             // console.log('createRow');
+                     var $ct=$('.img-preview');
+                    var  $rowCt =$('<div class="img-row"></div>');//创建一行；
+                    $.each(this.rowList,function(idx,imgInfo){
+                        var $imgCt = $('<div class="img-box"></div>'),//图片包裹容器；
+                            $img =imgInfo.target;//拿到 target那张图
+                            $img.height(newRowHeight);
+                            $imgCt.append($img);
+                            $rowCt.append($imgCt);
+                    })
+                  $ct.append($rowCt);
+                    $('body').append($ct)
+				}
+
+getData(16)
+</script>
+</body>
+</html>
